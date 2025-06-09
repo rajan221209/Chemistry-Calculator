@@ -43,6 +43,9 @@ export default function App() {
       .replace(/(\d)([a-zA-Z])/g, '$1*$2') // 2π → 2*π
       .replace(/([a-zA-Z])(\d)/g, '$1*$2') // π2 → π*2
       .replace(/(\))([a-zA-Z])/g, '$1*$2') // )π → )*π
+      .replace(/√(\d+(\.\d+)?|\([^)]+\))/g, (match: any, group: any) => {
+        return `sqrt(${group})`
+      })
 
     return processed;
   };
@@ -138,7 +141,7 @@ export default function App() {
             ['7', '8', '9', '*'],
             ['4', '5', '6', '-'],
             ['1', '2', '3', '+'],
-            ['0', '.', '^', '='],
+            ['0', '.', '^', '√'],
           ].map((row, i) => (
             <View key={i} style={styles.row}>
               {row.map((item) => {
