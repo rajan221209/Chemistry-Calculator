@@ -1,5 +1,5 @@
 import { evaluate } from 'mathjs';
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
 	SafeAreaView, ScrollView, StyleSheet,
 	Text,
@@ -10,6 +10,13 @@ import {
 export default function App() {
 	const [input, setInput] = useState('')
 	const [lastResult, setLastResult] = useState('')
+	const scrollViewRef = useRef(null)
+
+	useEffect(() => {
+		if (scrollViewRef.current) {
+			scrollViewRef.current.scrollToEnd({animated: true})
+		}
+	}, [input])
 
 	// Constants mapping
 	const constants = {
@@ -129,6 +136,7 @@ export default function App() {
 							style={[styles.input]}
 							horizontal
 							contentContainerStyle={{ justifyContent: 'flex-end', flexGrow: 1 }}
+							ref={scrollViewRef}
 						>
 							<Text style={[styles.inputText, { fontSize: dynamicFontSize }]}>
 								{renderColoredExpression(input)}
