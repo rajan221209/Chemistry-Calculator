@@ -8,7 +8,8 @@ import {
 } from 'react-native';
 
 export default function App() {
-	const [input, setInput] = useState('');
+	const [input, setInput] = useState('')
+	const [lastResult, setLastResult] = useState('')
 
 	// Constants mapping
 	const constants = {
@@ -70,14 +71,23 @@ export default function App() {
 	};
 
 	const handleEvaluate = () => {
-		if (!input.trim()) return; // Prevent evaluation if input is empty
+		if (!input.trim()) return;
 
 		try {
-			const processed = preprocessInput(input);
+			// If input is in formatted form, use the raw lastResult
+			let processed = '';
+			if (/x 10\^/.test(input) && lastResult !== null) {
+				processed = lastResult.toString();
+			} else {
+				processed = preprocessInput(input);
+			}
+
 			const result = evaluate(processed);
-			setInput(formatScientific(result));
+			setLastResult(result);  // Save raw result
+			setInput(formatScientific(result));  // Show formatted output
 		} catch {
 			setInput('Error');
+			setLastResult(null);
 		}
 	};
 
