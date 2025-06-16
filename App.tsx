@@ -11,10 +11,12 @@ export default function App() {
 	const [input, setInput] = useState('')
 	const [lastResult, setLastResult] = useState('')
 	const scrollViewRef = useRef(null)
+	const lastRawInputRef = useRef('');
+	const lastFormattedResultRef = useRef('');
 
 	useEffect(() => {
 		if (scrollViewRef.current) {
-			scrollViewRef.current.scrollToEnd({animated: true})
+			scrollViewRef.current.scrollToEnd({ animated: true })
 		}
 	}, [input])
 
@@ -44,14 +46,13 @@ export default function App() {
 		}
 
 		// Insert * where implicit multiplication is likely intended
-		// e.g., 2( → 2*(, )(3 → )*(3, 2π → 2*π
 		processed = processed
-			.replace(/(\d)(\()/g, '$1*(')     // 2( → 2*(
-			.replace(/(\))(\d)/g, '$1*$2')    // )2 → )*2
-			.replace(/(\d)([a-zA-Z])/g, '$1*$2') // 2π → 2*π
-			.replace(/([a-zA-Z])(\d)/g, '$1*$2') // π2 → π*2
-			.replace(/(\))([a-zA-Z])/g, '$1*$2') // )π → )*π
-			.replace(/√(\d+(\.\d+)?|\([^)]+\))/g, (match: any, group: any) => {
+			.replace(/(\d)(\()/g, '$1*(')
+			.replace(/(\))(\d)/g, '$1*$2')
+			.replace(/(\d)([a-zA-Z])/g, '$1*$2')
+			.replace(/([a-zA-Z])(\d)/g, '$1*$2')
+			.replace(/(\))([a-zA-Z])/g, '$1*$2')
+			.replace(/√(\d+(\.\d+)?|\([^\)]+\))/g, (match, group) => {
 				return `sqrt(${group})`
 			})
 
@@ -63,8 +64,6 @@ export default function App() {
 			if (value === ')') {
 				const opening = (prev.match(/\(/g) || []).length;
 				const closing = (prev.match(/\)/g) || []).length;
-
-				// Only allow closing bracket if it won't unbalance the expression
 				if (closing >= opening) return prev;
 			}
 			return prev + value;
@@ -81,24 +80,35 @@ export default function App() {
 		if (!input.trim()) return;
 
 		try {
-			// If input is in formatted form, use the raw lastResult
 			let processed = '';
+
+			// If user is just re-evaluating same formatted result, return the same result
+			if (input === formatScientific(lastResult)) {
+				setInput(formatScientific(lastResult));
+				return;
+			}
+
+			// If input includes 'x 10^', it means it's in formatted form, and user appended something
 			if (/x 10\^/.test(input) && lastResult !== null) {
-				processed = lastResult.toString();
+				// Replace formatted string with raw result and append what's new
+				const formatted = formatScientific(lastResult);
+				const appended = input.replace(formatted, '');
+				processed = lastResult.toString() + appended;
 			} else {
 				processed = preprocessInput(input);
 			}
 
 			const result = evaluate(processed);
-			setLastResult(result);  // Save raw result
-			setInput(formatScientific(result));  // Show formatted output
+			setLastResult(result);
+			setInput(formatScientific(result));
 		} catch {
 			setInput('Error');
 			setLastResult(null);
 		}
 	};
 
-	const renderButton = (label, onPress: () => void, style = {}) => (
+
+	const renderButton = (label, onPress, style = {}) => (
 		<TouchableOpacity style={[styles.button, style]} onPress={onPress}>
 			<Text style={styles.buttonText}>{label}</Text>
 		</TouchableOpacity>
@@ -109,7 +119,7 @@ export default function App() {
 	const dynamicFontSize = Math.max(minFontSize, maxFontSize - input.length * 1.2);
 
 	const renderColoredExpression = (expression) => {
-		const colors = ['#ff6f61', '#6a5acd', '#00bcd4', '#f4c20d']; // cycle through
+		const colors = ['#ff6f61', '#6a5acd', '#00bcd4', '#f4c20d'];
 		let depth = 0;
 
 		return expression.split('').map((char, index) => {
@@ -133,10 +143,14 @@ export default function App() {
 				<View style={styles.inputRow}>
 					<View style={styles.inputContainer}>
 						<ScrollView
-							style={[styles.input]}
 							horizontal
-							contentContainerStyle={{ justifyContent: 'flex-end', flexGrow: 1 }}
 							ref={scrollViewRef}
+							style={styles.input}
+							contentContainerStyle={{
+								justifyContent: 'flex-end',
+								flexGrow: 1,
+								paddingRight: 25,
+							}}
 						>
 							<Text style={[styles.inputText, { fontSize: dynamicFontSize }]}>
 								{renderColoredExpression(input)}
