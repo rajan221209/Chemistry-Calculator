@@ -1,6 +1,6 @@
 # Open Learning - Chemistry Calculator
 
-Open source calculator, made for making learning chesmitry easier for students.
+Open source calculator, made for making learning chemistry easier for students.
 
 ## Why to use it over an actual calculator or even a default android calculator app?
 1. Default Android calculators although capable for doing long operations, are hard to use for chem calculations, requiring students to type in all the constant's values and not having any topic specific functions, which this calculator fixes.
